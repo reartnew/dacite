@@ -22,7 +22,6 @@ from dacite.exceptions import (
     StrictUnionMatchError,
 )
 from dacite.types import (
-    is_instance,
     is_generic_collection,
     is_union,
     extract_generic,
@@ -65,7 +64,7 @@ def from_dict(data_class: Type[T], data: Data, config: Optional[Config] = None) 
             except DaciteFieldError as error:
                 error.update_path(field.name)
                 raise
-            if config.check_types and not is_instance(value, field_type):
+            if config.check_types and not config.is_instance(value, field_type):
                 raise WrongTypeError(field_path=field.name, field_type=field_type, value=value)
         else:
             try:
@@ -119,7 +118,7 @@ def _build_value_for_union(union: Type, data: Any, config: Config) -> Any:
                 value = _build_value(type_=inner_type, data=data, config=config)
             except Exception:  # pylint: disable=broad-except
                 continue
-            if is_instance(value, inner_type):
+            if config.is_instance(value, inner_type):
                 if config.strict_unions_match:
                     union_matches[inner_type] = value
                 else:
